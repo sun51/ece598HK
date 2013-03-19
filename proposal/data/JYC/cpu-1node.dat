@@ -1,0 +1,7 @@
+#GPU        cpu-core        cutoff-benchmark(ms/step)
+0           1               1108
+0           2               542.8
+0           4               312.5
+0           8               177.1
+0           15              100.0 
+0           31              49.0 
