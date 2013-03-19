@@ -1,0 +1,6 @@
+#GPU        cpu-core        cutoff-benchmark(ms/step)   pme4        pme1    
+1           1               113.6                       141.6       224.5 
+1           2               56.8                        
+1           4               34.8                        
+1           8               27.7 
+1           15              26.7
