@@ -104,25 +104,25 @@ Through many years, NAMD has been highly optimized to achieve scalable performan
 It has successfully scaled to the full Titan supercomputer with around $300K$ cores and 
 the full Blue Waters with $400K$ cores. In the last 7 years, NAMD has been accommodated
 to take the advantage of accelerators, mainly meaning GPGPU. However, it still needs a lot of 
-efforts to maximize the performance on GPU. Below we will show the existing GPU performance and 
-scalability to motivate our work. 
+efforts to maximize the performance on GPU. In this project, we are aiming at both 
+improve single GPU performance  and scalability on large number of cores. 
 %\namd{}
 
 \section{Background}
 In a molecular dynamics simulation, a collection of atoms interact through a set of forces. 
 Since each atom interacts with all the other atoms, the complexity of calculating forces
 is $O(Atoms^2)$. This algorithm does not scale with the number of atoms. Based on the fact that
-atoms from far distance contributes little to the force calculation, in \namd{} the interaction is
+atoms from far distance contribute little to the force calculation, in \namd{} the interaction is
 calculated by short range forces and long range forces. The molecule  is spatially divided into 
 patches based on cutoff distance. Atoms in one patch only interact with other atoms in neighbor patches.
 To be more accurate, long range electrostatics calculation is performed through particle-mesh Ewald (PME) method.
 For these two types of calculation, short range forces are computation intensive while PME is communication intensive.
 Therefore, in current NAMD GPU design and implementation, non-bonded cutoff computation is offload to GPU.
-All other bonded work, integration and PME work are assigned to CPU.
+All other bonded work, integration and PME work is remained on CPU.
 
 \section{Objective}
 After a lot of efforts on optimizing NAMD GPU performance~\cite{phillips_stone_namd_cuda}, NAMD has achieved 
-about 10X speed comparing with using one processor-core. However, there is still a lot of 
+about 10X speed comparing with using one processor-core. However, there is still great
 potential space for performance improvement, including tuning on Kepler Tesla K20X and
 also improving GPU scalability.
 
@@ -162,7 +162,19 @@ In our project, we will analyze the scaling problem and target at improving GPU 
 \vspace{-0.2cm}
 \end{figure}
 
+\section{Milestone}
+\begin{enumerate}
+
+\item Profile and analyze single GPU performance of existing implementation to figure 
+out the potential performance problem.  We will do more experiments on Kepler GPU. 
+\item Try to modify GPU code to solve the above problems
+\item Implement scheme to better balance CPU and GPU load 
+\item Improve the large-scale running performance
+
+\end{enumerate}
+
 \bibliographystyle{abbrv}
 \bibliography{group,cited}
 \end{document}
+
 
