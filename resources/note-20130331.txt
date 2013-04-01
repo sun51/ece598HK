@@ -1,0 +1,15 @@
+Note 20130331
+
+Optimization possibilities (from running NAMD with computeprof):
+#1 global load/store uncoalesce >> coalecsed, may be able to improve
+#2 change block size, currently is 128, 64 and 256 do not work, other
+places in code may also use 128 value
+#3 cache miss/hit: table in tool is confusing. If comment is correct,
+cache miss > cache hit
+#4 warp size serial number, may be able to improve
+
+Others:
+#1 on dev0, when block size=128, first kernel invocation spends 970.653 ms,
+second kernel invocation spends 585.661 ms. grid size is 1728. 
+#2 on dev1, each kernel is invoked twice. grid size is divided by 2.
+may be one invocation is for local patch, and one is for remote patch.
