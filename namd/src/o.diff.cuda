@@ -1,0 +1,299 @@
+41d40
+< #define TILE_WIDTH 1
+85c84
+<   #define pl plu[0].c
+---
+>   #define pl plu.c
+89c88
+<   } plu[TILE_WIDTH];
+---
+>   } plu;
+126d124
+< 
+166c164
+<         blocki += (BLOCK_SIZE *2)) {
+---
+>         blocki += BLOCK_SIZE ) {
+168c166
+<   atom ipq[TILE_WIDTH];
+---
+>   atom ipq;
+171c169
+<     int index; } iap[TILE_WIDTH];
+---
+>     int index; } iap;
+174,183c172,179
+<   for(int __ii = 0; __ii < TILE_WIDTH; __ii++)
+<   {
+<       if ( blocki + threadIdx.x + __ii*BLOCK_SIZE < myPatchPair.patch1_force_size ) {
+<           int i = myPatchPair.patch1_atom_start + blocki + threadIdx.x + __ii*BLOCK_SIZE;
+<           float4 tmpa = ((float4*)atoms)[i];
+< 
+<           ipq[__ii].position.x = tmpa.x + myPatchPair.offset.x;
+<           ipq[__ii].position.y = tmpa.y + myPatchPair.offset.y;
+<           ipq[__ii].position.z = tmpa.z + myPatchPair.offset.z;
+<           ipq[__ii].charge = tmpa.w;
+---
+>   if ( blocki + threadIdx.x < myPatchPair.patch1_force_size ) {
+>     int i = myPatchPair.patch1_atom_start + blocki + threadIdx.x;
+>     float4 tmpa = ((float4*)atoms)[i];
+> 
+>     ipq.position.x = tmpa.x + myPatchPair.offset.x;
+>     ipq.position.y = tmpa.y + myPatchPair.offset.y;
+>     ipq.position.z = tmpa.z + myPatchPair.offset.z;
+>     ipq.charge = tmpa.w;
+185c181
+<           uint4 tmpap = ((uint4*)atom_params)[i];
+---
+>     uint4 tmpap = ((uint4*)atom_params)[i];
+187,189c183,184
+<           iap[__ii].vdw_type = tmpap.x;
+<           iap[__ii].index = tmpap.y;
+<       }
+---
+>     iap.vdw_type = tmpap.x;
+>     iap.index = tmpap.y;
+191c186
+<   
+---
+> 
+194,197c189,190
+<       for(int __jplu=0; __jplu<TILE_WIDTH; __jplu++){
+<       int i_pl = ((blocki+__jplu*BLOCK_SIZE) >> 2) + myPatchPair.block_flags_start;
+<       plu[__jplu].i[threadIdx.x] = block_flags[i_pl + (threadIdx.x & 31)];
+<     }
+---
+>     int i_pl = (blocki >> 2) + myPatchPair.block_flags_start;
+>     plu.i[threadIdx.x] = block_flags[i_pl + (threadIdx.x & 31)];
+200,202c193
+<       for(int __jplu=0; __jplu<TILE_WIDTH; __jplu++){
+<       plu[__jplu].i[threadIdx.x] = 0;
+<     }
+---
+>     plu.i[threadIdx.x] = 0;
+206,216c197,206
+<   float4 ife[TILE_WIDTH], ife_slow[TILE_WIDTH];
+<   for(int _iff =0 ; _iff < TILE_WIDTH; _iff++){
+<       ife[_iff].x = 0.f;
+<       ife[_iff].y = 0.f;
+<       ife[_iff].z = 0.f;
+<       ife[_iff].w = 0.f;
+<       ife_slow[_iff].x = 0.f;
+<       ife_slow[_iff].y = 0.f;
+<       ife_slow[_iff].z = 0.f;
+<       ife_slow[_iff].w = 0.f;
+<   }
+---
+>   float4 ife, ife_slow;
+>   ife.x = 0.f;
+>   ife.y = 0.f;
+>   ife.z = 0.f;
+>   ife.w = 0.f;
+>   ife_slow.x = 0.f;
+>   ife_slow.y = 0.f;
+>   ife_slow.z = 0.f;
+>   ife_slow.w = 0.f;
+> 
+245,246c235
+<   for(int __jatom = 0; __jatom < TILE_WIDTH; __jatom ++) {
+<   if ( blocki+__jatom*BLOCK_SIZE + threadIdx.x < myPatchPair.patch1_force_size ) {
+---
+>   if ( blocki + threadIdx.x < myPatchPair.patch1_force_size ) {
+249,306c238,295
+<         for ( int j = 0; j < shared_size; ++j ) {
+<             /* actually calculate force */
+<             float tmpx = jpqs[j].position.x - ipq[__jatom].position.x;
+<             float tmpy = jpqs[j].position.y - ipq[__jatom].position.y;
+<             float tmpz = jpqs[j].position.z - ipq[__jatom].position.z;
+<             float r2 = tmpx*tmpx + tmpy*tmpy + tmpz*tmpz;
+<             GENPAIRLIST( if(r2<plcutoff2) ) { GENPAIRLIST( plpli=1; )
+<             if ( r2 < cutoff2 ) {
+<                 ENERGY( float rsqrtfr2; )
+<                 float4 fi = tex1D(force_table, ENERGY(rsqrtfr2 =) rsqrtf(r2));
+<                 ENERGY( float4 ei = tex1D(energy_table, rsqrtfr2); )
+<                 float2 ljab = tex1Dfetch(lj_table,
+<                     /* lj_table_size * */ japs[j].vdw_type + iap[__jatom].vdw_type);
+< 
+<                 bool excluded = false;
+<                 int indexdiff = (int)(iap[__jatom].index) - (int)(japs[j].index);
+<                 if ( abs(indexdiff) <= (int) japs[j].excl_maxdiff ) {
+<                     indexdiff += japs[j].excl_index;
+<                     int indexword = indexdiff >> 5;
+<                     if ( indexword < MAX_CONST_EXCLUSIONS )
+<                         indexword = const_exclusions[indexword];
+<                     else indexword = overflow_exclusions[indexword];
+<                     excluded = ((indexword & (1<<(indexdiff&31))) != 0);
+<                 }
+<                 float f_slow = ipq[__jatom].charge * jpqs[j].charge;
+<                 float f = ljab.x * fi.z + ljab.y * fi.y + f_slow * fi.x;
+<                 ENERGY(
+<                     float ev = ljab.x * ei.z + ljab.y * ei.y;
+<                     float ee = f_slow * ei.x;
+<                     SLOW( float es = f_slow * ei.w; )
+<                     )
+<                 SLOW( f_slow *= fi.w; )
+<                 if ( ! excluded ) { \
+<                     ENERGY(
+<                         totalev += ev;
+<                         totalee += ee;
+<                         SLOW( totales += es; )
+<                         if ( blockj + j >= myPatchPair.patch2_force_size ) {
+<                         /* add fixed atoms twice */
+<                         totalev += ev;
+<                         totalee += ee;
+<                         SLOW( totales += es; )
+<                         }
+<                         )
+<                         /* ife.w += r2 * f; */
+<                   ife[__jatom].x += tmpx * f;
+<                   ife[__jatom].y += tmpy * f;
+<                   ife[__jatom].z += tmpz * f;
+<                   SLOW(
+<                       /* ife_slow.w += r2 * f_slow; */
+<                       ife_slow[__jatom].x += tmpx * f_slow;
+<                       ife_slow[__jatom].y += tmpy * f_slow;
+<                       ife_slow[__jatom].z += tmpz * f_slow;
+<                       )
+<                 } else ife[__jatom].w += 1.f;
+<             }  /* end if cutoff */
+<           } //end r2cutoff
+<         }// end for j
+---
+> 
+>     for ( int j = 0; j < shared_size; ++j ) {
+>       /* actually calculate force */
+>       float tmpx = jpqs[j].position.x - ipq.position.x;
+>       float tmpy = jpqs[j].position.y - ipq.position.y;
+>       float tmpz = jpqs[j].position.z - ipq.position.z;
+>       float r2 = tmpx*tmpx + tmpy*tmpy + tmpz*tmpz;
+>       GENPAIRLIST( if(r2<plcutoff2) ) { GENPAIRLIST( plpli=1; )
+>       if ( r2 < cutoff2 ) {
+>         ENERGY( float rsqrtfr2; )
+>         float4 fi = tex1D(force_table, ENERGY(rsqrtfr2 =) rsqrtf(r2));
+>         ENERGY( float4 ei = tex1D(energy_table, rsqrtfr2); )
+>         float2 ljab = tex1Dfetch(lj_table,
+>                 /* lj_table_size * */ japs[j].vdw_type + iap.vdw_type);
+>         bool excluded = false;
+>         int indexdiff = (int)(iap.index) - (int)(japs[j].index);
+>         if ( abs(indexdiff) <= (int) japs[j].excl_maxdiff ) {
+>           indexdiff += japs[j].excl_index;
+>           int indexword = indexdiff >> 5;
+>           if ( indexword < MAX_CONST_EXCLUSIONS )
+>                indexword = const_exclusions[indexword];
+>           else indexword = overflow_exclusions[indexword];
+>           excluded = ((indexword & (1<<(indexdiff&31))) != 0);
+>         }
+>         float f_slow = ipq.charge * jpqs[j].charge;
+>         float f = ljab.x * fi.z + ljab.y * fi.y + f_slow * fi.x;
+>         ENERGY(
+>         float ev = ljab.x * ei.z + ljab.y * ei.y;
+>         float ee = f_slow * ei.x;
+>         SLOW( float es = f_slow * ei.w; )
+>         )
+>         SLOW( f_slow *= fi.w; )
+>         if ( ! excluded ) { \
+>           ENERGY(
+>           totalev += ev;
+>           totalee += ee;
+>           SLOW( totales += es; )
+>           if ( blockj + j >= myPatchPair.patch2_force_size ) {
+>             /* add fixed atoms twice */
+>             totalev += ev;
+>             totalee += ee;
+>             SLOW( totales += es; )
+>           }
+>           )
+>           /* ife.w += r2 * f; */
+>           ife.x += tmpx * f;
+>           ife.y += tmpy * f;
+>           ife.z += tmpz * f;
+>           SLOW(
+>           /* ife_slow.w += r2 * f_slow; */
+>           ife_slow.x += tmpx * f_slow;
+>           ife_slow.y += tmpy * f_slow;
+>           ife_slow.z += tmpz * f_slow;
+>           )
+>         } else ife.w += 1.f;
+>       } }  /* cutoff */
+>     }
+> 
+308,309d296
+<     }   // end if  
+<   } //end tile
+328a316
+>   } // if
+330,334c318,321
+<   
+<   for(int __jatom = 0; __jatom < TILE_WIDTH; __jatom ++) {
+<   if ( blocki + threadIdx.x +__jatom*BLOCK_SIZE< myPatchPair.patch1_force_size ) {
+<     int i_out = myPatchPair.patch1_force_start + blocki + threadIdx.x + __jatom*BLOCK_SIZE;
+<     force_buffers[i_out] = ife[__jatom];
+---
+> 
+>   if ( blocki + threadIdx.x < myPatchPair.patch1_force_size ) {
+>     int i_out = myPatchPair.patch1_force_start + blocki + threadIdx.x;
+>     force_buffers[i_out] = ife;
+336c323
+<       slow_force_buffers[i_out] = ife_slow[__jatom];
+---
+>       slow_force_buffers[i_out] = ife_slow;
+340,345c327,332
+<     //const int thread = threadIdx.x & 3;  // 4 threads share each entry
+<     //for ( int g = 0; g < 4; ++g ) {
+<     //  if ( thread == g ) {
+<         sumf.a2d[subwarp][0] += ife[__jatom].x;
+<         sumf.a2d[subwarp][1] += ife[__jatom].y;
+<         sumf.a2d[subwarp][2] += ife[__jatom].z;
+---
+>     const int thread = threadIdx.x & 3;  // 4 threads share each entry
+>     for ( int g = 0; g < 4; ++g ) {
+>       if ( thread == g ) {
+>         sumf.a2d[subwarp][0] += ife.x;
+>         sumf.a2d[subwarp][1] += ife.y;
+>         sumf.a2d[subwarp][2] += ife.z;
+347,351c334,338
+<           sumf_slow.a2d[subwarp][0] += ife_slow[__jatom].x;
+<           sumf_slow.a2d[subwarp][1] += ife_slow[__jatom].y;
+<           sumf_slow.a2d[subwarp][2] += ife_slow[__jatom].z;
+<      //   }
+<      // }
+---
+>           sumf_slow.a2d[subwarp][0] += ife_slow.x;
+>           sumf_slow.a2d[subwarp][1] += ife_slow.y;
+>           sumf_slow.a2d[subwarp][2] += ife_slow.z;
+>         }
+>       }
+354d340
+<   } //end tile
+356,371c342,355
+<       __syncthreads();  // all shared pairlist writes complete
+<       for(int __jplu=0; __jplu<TILE_WIDTH; __jplu++){
+<           unsigned int pltmp;
+<           if ( threadIdx.x < 32 ) {
+<               pltmp = plu[__jplu].i[threadIdx.x];
+<               pltmp |= plu[__jplu].i[threadIdx.x+32] << 1;
+<               pltmp |= plu[__jplu].i[threadIdx.x+64] << 2;
+<               pltmp |= plu[__jplu].i[threadIdx.x+96] << 3;
+<           }
+<       __syncthreads();  // all shared pairlist reads complete
+<           if ( threadIdx.x < 32 ) {
+<               int i_pl = ((blocki +__jplu*BLOCK_SIZE) >> 2) + myPatchPair.block_flags_start;
+<               block_flags[i_pl + threadIdx.x] = pltmp;
+<           }
+<       } //end for
+<   } //end if
+---
+>     __syncthreads();  // all shared pairlist writes complete
+>     unsigned int pltmp;
+>     if ( threadIdx.x < 32 ) {
+>       pltmp = plu.i[threadIdx.x];
+>       pltmp |= plu.i[threadIdx.x+32] << 1;
+>       pltmp |= plu.i[threadIdx.x+64] << 2;
+>       pltmp |= plu.i[threadIdx.x+96] << 3;
+>     }
+>     __syncthreads();  // all shared pairlist reads complete
+>     if ( threadIdx.x < 32 ) {
+>       int i_pl = (blocki >> 2) + myPatchPair.block_flags_start;
+>       block_flags[i_pl + threadIdx.x] = pltmp;
+>     }
+>   }
