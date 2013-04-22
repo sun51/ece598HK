@@ -1,0 +1,19 @@
+pairlist optimization 
+
+Calculate multiple atoms per thread when load one shared block. 
+
+Without pairlist, it works.  On talent with gtx880 GPU, it is 12% faster. 
+On JYC with Kelper, it is slower.
+
+With pairlist optimization, simulation is unstable.
+
+
+- GPU and CPU computes balance 
+
+Create Computes -- balance computes between CPU and GPU 
+
+Computes ( Pair, Self) call initilize(), commenting out GPU code
+
+noWork(),  Modified code to calculate cpu computes
+
+Base(), modified code so as to not skip calculation.
