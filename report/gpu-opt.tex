@@ -69,4 +69,34 @@ the pseudo-code after tiling is applied. TILE\_WIDTH\_1 and TILE\_WIDTH\_2 are m
 %\vspace{-0.5cm}
 \end{figure}
 
+Fig.~\ref{figs:patch1-count} shows a comparison of computation time among different patch 1 atoms, which is derived by examining a system with 401 atoms in patch 1
+and counting how many inner loop needed for each atom. Because there are 401 atoms in total and 128 threads in one thread block, it needs four outer loops to
+complete the work. In Fig.~\ref{figs:patch1-count}, region between read dashed lines represents work on atoms assigned to the first
+warp and red circles indicate the maximum computation time in current outer loop. The sum results of four read circles is about 920, which indicates
+the total work time for the first warp when inner loop is completely tiled and outer loop is not (one synchronization in each outer loop).
+
+Fig.~\ref{figs:thread-count} shows a comparison of computation time among different threads within one thread block, by examining the same system
+in Fig.~\ref{figs:patch1-count}. Similarly, region betwen read dashed lines represents work on the first warp. It is shown that the maximum computation time
+in this figure is below 800. It inidcates the total work time for the first warp when both inner loop and outer loop are completely tiled (only one synchronization exists). 
+
+\begin{figure}[h]
+\centering
+\setlength{\abovecaptionskip}{-1pt}
+\setlength{\belowcaptionskip}{-2pt}
+\includegraphics[width=6.0in]{figs/patch1_count.eps}
+\caption{Computation comparison for different patch 1 atoms}
+\label{figs:patch1-count}
+\vspace{-0.5cm}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\setlength{\abovecaptionskip}{-1pt}
+\setlength{\belowcaptionskip}{-2pt}
+\includegraphics[width=6.0in]{figs/thread_count.eps}
+\caption{Computation comparison for different threads}
+\label{figs:thread-count}
+\vspace{-0.5cm}
+\end{figure}
+
 \subsubsection{Patch 1 Atoms Sorting}
