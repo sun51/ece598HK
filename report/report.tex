@@ -108,17 +108,20 @@ efforts to maximize the performance on GPU. In this project, we are aiming at bo
 improve single GPU performance  and scalability on large number of cores. 
 %\namd{}
 
-\section{Background}
-In a molecular dynamics simulation, a collection of atoms interact through a set of forces. 
-Since each atom interacts with all the other atoms, the complexity of calculating forces
-is $O(Atoms^2)$. This algorithm does not scale with the number of atoms. Based on the fact that
-atoms from far distance contribute little to the force calculation, in \namd{} the interaction is
-calculated by short range forces and long range forces. The molecule  is spatially divided into 
-patches based on cutoff distance. Atoms in one patch only interact with other atoms in neighbor patches.
-To be more accurate, long range electrostatics calculation is performed through particle-mesh Ewald (PME) method.
-For these two types of calculation, short range forces are computation intensive while PME is communication intensive.
-Therefore, in current NAMD GPU design and implementation, non-bonded cutoff computation is offload to GPU.
-All other bonded work, integration and PME work is remained on CPU.
+\section{NAMD GPU Design } 
+\input{design}
+
+%\section{Background}
+%In a molecular dynamics simulation, a collection of atoms interact through a set of forces. 
+%Since each atom interacts with all the other atoms, the complexity of calculating forces
+%is $O(Atoms^2)$. This algorithm does not scale with the number of atoms. Based on the fact that
+%atoms from far distance contribute little to the force calculation, in \namd{} the interaction is
+%calculated by short range forces and long range forces. The molecule  is spatially divided into 
+%patches based on cutoff distance. Atoms in one patch only interact with other atoms in neighbor patches.
+%To be more accurate, long range electrostatics calculation is performed through particle-mesh Ewald (PME) method.
+%For these two types of calculation, short range forces are computation intensive while PME is communication intensive.
+%Therefore, in current NAMD GPU design and implementation, non-bonded cutoff computation is offload to GPU.
+%All other bonded work, integration and PME work is remained on CPU.
 
 \section{Objective}
 After a lot of efforts on optimizing NAMD GPU performance~\cite{phillips_stone_namd_cuda}, NAMD has achieved 
@@ -163,8 +166,6 @@ In our project, we will analyze the scaling problem and target at improving GPU 
 \end{figure}
 
 
-\section{NAMD GPU Design } 
-\input{design}
 
 \section{NAMD GPU Kernel Optimization}
 \input{gpu-opt}
