@@ -8,7 +8,12 @@
 \usepackage{ctable}
 \usepackage{multirow}
 \usepackage{bigdelim}
-
+\usepackage{ctable}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{listings}
 \usepackage{epsfig,alltt}
 \usepackage{graphics}
 \usepackage{shortvrb}
@@ -21,6 +26,22 @@
 %\usepackage{ulem}
 
 \usepackage{listings}
+\lstset{fancyvrb=true}
+\lstset{
+    language=C++,
+        basicstyle=\footnotesize\tt,
+        %basicstyle=\tt, 
+        %keywordstyle=\color{blue},
+        identifierstyle=,
+        %commentstyle=\color{green},
+        %stringstyle=\color{red},
+        showstringspaces=false,
+        captionpos=t,
+        tabsize=3,
+        %linewidth=12mm,
+        numbers=left, 
+        stepnumber=2
+}
 
 %\usepackage{pdftricks}
 %\begin{psinputs}
@@ -102,15 +123,31 @@ software with more than 50,000 users. It was also selected by NSF as an acceptan
 for Blue Waters.
 Through many years, NAMD has been highly optimized to achieve scalable performance on CPU.
 It has successfully scaled to the full Titan supercomputer with around $300K$ cores and 
-the full Blue Waters with $400K$ cores. In the last 7 years, NAMD has been accommodated
-to take the advantage of accelerators, mainly meaning GPGPU. However, it still needs a lot of 
-efforts to maximize the performance on GPU. In this project, we are aiming at both 
-improve single GPU performance  and scalability on large number of cores. 
+the full Blue Waters with $400K$ cores.
+
+These years, GPU-accelerated algorithms have demostrated speedup of 10- to 100-fold. Meanwhile, 
+the hardware has been improved significantly to better match the needs of algorithms over the years.
+Since 2006, NAMD has been accommodated to take the advantage of GPU-accelerators. Speedup of 
+6- or even 10- has been demonstrated in the previous work~\cite{phillips_stone_namd_cuda}.
+Although NAMD GPU has been carefully designed and optimized, it still needs a lot of 
+efforts to maximize the performance on GPU, especially on the new hardware such as Fermi, Kepler. 
+
+In this report, we first analyzed NAMD performance on two machines with different configurations.
+One is with fast CPU but slow old GPU while the other has fast CPU but slower CPU. We showed 
+the results and explained the reasons. Based on our analysis, we optimized the GPU kernel code
+to reduce the GPU time. This optimization helps when GPU becomes performance bottleneck.
+At the same time, due to the difference of total CPU and GPU capabilities, the load between them
+can be imbalanced. We also proposed and implemented a load balancing strategy between CPU and GPU.
+We demostrate the effectiveness of our optimizations by comparing the original performance results
+and new results.
+
 %\namd{}
 
 \section{NAMD GPU Design } 
 \input{design}
 
+\section{NAMD GPU CPU Load Balance}
+\input{loadbalance}
 %\section{Background}
 %In a molecular dynamics simulation, a collection of atoms interact through a set of forces. 
 %Since each atom interacts with all the other atoms, the complexity of calculating forces
