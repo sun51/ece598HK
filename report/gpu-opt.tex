@@ -108,3 +108,8 @@ In each time step, we first sort the patch 1 atoms according to their workload, 
 By assigning patch 1 atoms based on sorting instead of randomly, work differences among threads within one warp is not as large as before, and large work
 are all assigned to the last warps. The workload on atoms is not changed very little between consecutive time steps, therefore sorting result from the last time step
 can be applied to the current time step. 
+
+In our current code, we implement the basic sorting algorithm. This algorithm has the problem that threads which are assigned the least work in the beginning will always
+get less work, and same for threads which get the most work. A better strategy to assign the work should be to sort the first 128 atoms in the ascending order,
+and the second 128 atoms in the descending order, and the third 128 atoms in the ascending order, and so on. In this way, threads who get less work in the first
+iteration will get more work in the next iteration. Work can be assigned more evenly.
