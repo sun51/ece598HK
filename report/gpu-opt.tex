@@ -30,26 +30,34 @@ divergence. They are described in detail in following sections.
 \subsection{Optimizations}
 \subsubsection{Patch 1 Atoms Tiling}
 
-As indicated in Fig.~\ref{figs:pseudocode}, in the outer loop, all atoms in patch 2 need to be iterated for each patch 1 atom,
-and there will be thread synchonization in every loop. According to that fact, we first considered the optimization of patch 1 atoms tiling,
-in which each thread loads mulitple atoms instead of only one from patch 1 in the outer loop. By doing this, total number of outer loops can be reduced.
-Because we merge work on each thread, synchronization latency can be decreased as indicated in Fig.~\ref{figs:divergence}.
-Furthermore, data reuse can be improved because patch 2 atoms can be used for multiple patch 1 atoms in each outer loop.
+As indicated in Fig.~\ref{figs:pseudocode}, in each outer loop, for one atom in patch 1, every thread needs to iterate and examine all loaded atoms from patch 2
+and call synchronization routines. In order to reduce the synchronization overhead, we first considered tiling of patch 1 atoms,
+in which every thread loads mulitple atoms instead of only one atom from patch 1 in each outer loop.
+By doing this, total number of outer loops can be reduced. Furthermore, data reuse of patch 2 is improved because now atoms from patch 2 is used to calculate
+forces of more atoms from patch 1.
+
+Fig.~\ref{figs:divergence} shows an example of how merging loops can improve the performance. Suppose thread 1 (T1) has 9 units of computation in the first loop and 2 units
+of computation in the second loop, whereas thread 2 (T2) has 3 units to do in the first loop and 8 units to do in the second loop. In the first loop T2 needs to wait for
+completion of T1 while in the second loop T1 needs to wait for T2. Both threads have to spend long time waiting for each other and total synchronization time is 17.
+After merging loops on both T1 and T2, divergence between them is reduced, synchronization call is decreased by 1, and now total synchronization time is 11.
 
 \begin{figure}[h]
 \centering
 \setlength{\abovecaptionskip}{-1pt}
-\setlength{\belowcaptionskip}{-2pt}
+\setlength{\belowcaptionskip}{-5pt}
 \includegraphics[width=6.0in]{figs/divergence.eps}
-\caption{Reduce control divergence by patch 1 tiling}
+\caption{Reduce control divergence by merging loops}
 \label{figs:divergence}
-%\vspace{-0.5cm}
+\vspace{-0.5cm}
 \end{figure}
 
 \subsubsection{Patch 2 Atoms Tiling}
-We also implemented tiling for loading patch 2 atoms to further reduce synchronization calls. In the original implementation in Fig.~\ref{figs:pseudocode},
-for each inner loop, threads collaborate to load patch 2 atoms for one time. Instead, we make threads load multiple times in each inner loop to reduce the
-total number of inner loops.
+
+After finishing tiling of loading patch 1 atoms, we consider tiling of loading patch 2 atoms to further reduce synchronization calls.
+In the original implementation in Fig.~\ref{figs:pseudocode}, for each inner loop, all threads in the thread block collaborate to load SHARED\_SIZE
+patch 2 atoms for just one time.
+In our optimization, we make all threads load patch 2 atoms multiple times with SHARED\_SIZE in each time. Fig.~\ref{figs:pseudocode-tile} shows
+the pseudo-code after tiling is applied. TILE\_WIDTH\_1 and TILE\_WIDTH\_2 are macros to set tile widths for patch 1 and patch 2 correspondingly.
 
 \begin{figure}[h]
 \centering
