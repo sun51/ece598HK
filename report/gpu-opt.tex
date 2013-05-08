@@ -100,3 +100,11 @@ in this figure is below 800. It inidcates the total work time for the first warp
 \end{figure}
 
 \subsubsection{Patch 1 Atoms Sorting}
+
+Inspite of merging loops, we observe that control divergence still exists because there are some threads that always have large work and some threads
+that always have small work in each loop. In this case, merging loops would not make a big difference since threads still have to wait for those with
+large work to finish. To reduce the control divergence, an effective optimization approach is assigning patch 1 work in a more regular way.
+In each time step, we first sort the patch 1 atoms according to their workload, and then pass the sorting result to the next time step to assign the work to threads.
+By assigning patch 1 atoms based on sorting instead of randomly, work differences among threads within one warp is not as large as before, and large work
+are all assigned to the last warps. The workload on atoms is not changed very little between consecutive time steps, therefore sorting result from the last time step
+can be applied to the current time step. 
