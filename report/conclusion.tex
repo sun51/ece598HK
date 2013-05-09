@@ -1,1 +1,11 @@
- 
+In this report, we have presented summary of our work on performance analysis and optimization for NAMD GPU implementation.
+Our work is composed by two main aspects: one is GPU kernel optimization, and another is GPU / CPU load balancing. For both of them,
+we tried different approaches to reduce divergence among threads and between GPU and CPUs. For GPU / CPU load balancing,
+we first profiled the timeline when running program with 1 GPU with multiple CPUs and observed that nonbonded work on GPU is the bottleneck. Therefore
+we offload part of nonbonded work from GPU to CPUs. For GPU kernel implemenation, we used CUDA profiling tools to get
+GPU timing, occupancy, memory usage, etc, and observed that force calculation dominates most time. Based on our observation,
+we proposed the tiling approach and sorting strategy to reduce control divergence caused by synchronization. We tested our code on two different machines to reflect
+performance on different architecture configurations. 
+
+In our future work, for load balancing, we plan to use more intelligent instrumentation-based balance scheme when assigning work to CPU and GPU.
+For GPU kernel optimization, we plan to use a better strategy to sort atoms in the patch so that works on different threads can be assigned in a more even way.
